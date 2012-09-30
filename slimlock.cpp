@@ -242,6 +242,7 @@ int main(int argc, char **argv) {
 
     XCloseDisplay(dpy);
 
+    flock(lock_file, LOCK_UN);
     close(lock_file);
 
     if(cfg->getOption("tty_lock") == "1") {
