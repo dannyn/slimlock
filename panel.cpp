@@ -552,6 +552,8 @@ Rectangle Panel::GetPrimaryViewport() {
     XRRScreenResources *resources;
     XRRCrtcInfo *crtc_info;
 
+    int crtc;
+
     fallback.x = 0;
     fallback.y = 0;
     fallback.width = DisplayWidth(Dpy, Scr);
@@ -572,8 +574,24 @@ Rectangle Panel::GetPrimaryViewport() {
         XRRFreeScreenResources(resources);
         return fallback;
     }
+    if (primary_info->crtc < 1) {
+        if (primary_info->ncrtc > 0) {
+            // just use the first one. 
+            // i do not know what the consequences
+            // of this will be. it seems to be that the index
+            // is which monitor to use.  
+            crtc = primary_info->crtcs[0];
+        } else {
+            cerr << "Cannot get crtc from xrandr.\n";
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        crtc = primary_info->crtc;
+    }
+    // this is the function call its dying on 
+    crtc_info = XRRGetCrtcInfo(Dpy, resources, crtc);
 
-    crtc_info = XRRGetCrtcInfo(Dpy, resources, primary_info->crtc);
+
     if (!crtc_info) {
         XRRFreeOutputInfo(primary_info);
         XRRFreeScreenResources(resources);
