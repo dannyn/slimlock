@@ -120,34 +120,39 @@ Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
     }
 
     if (bgstyle == "stretch") {
-        bg->Resize(viewport.width, viewport.height);
+        bg->Resize(viewport[0].width, viewport[0].height);
     } else if (bgstyle == "tile") {
-        bg->Tile(viewport.width,
-                 viewport.height);
+        bg->Tile(viewport[0].width,
+                 viewport[0].height);
     } else if (bgstyle == "center") {
         string hexvalue = cfg->getOption("background_color");
         hexvalue = hexvalue.substr(1,6);
-        bg->Center(viewport.width,
-                   viewport.height,
+        bg->Center(viewport[0].width,
+                   viewport[0].height,
                    hexvalue.c_str());
     } else { // plain color or error
         string hexvalue = cfg->getOption("background_color");
         hexvalue = hexvalue.substr(1,6);
-        bg->Center(viewport.width,
-                   viewport.height,
+        bg->Center(viewport[0].width,
+                   viewport[0].height,
                    hexvalue.c_str());
     }
 
     string cfgX = cfg->getOption("input_panel_x");
     string cfgY = cfg->getOption("input_panel_y");
-    X = Cfg::absolutepos(cfgX, viewport.width, image->Width());
-    Y = Cfg::absolutepos(cfgY, viewport.height, image->Height());
+    X = Cfg::absolutepos(cfgX, viewport[0].width, image->Width());
+    Y = Cfg::absolutepos(cfgY, viewport[0].height, image->Height());
 
     input_name_x += X, input_name_y += Y, input_pass_x += X, input_pass_y += Y;
 
-    // Merge image into background
+    // Create first background (with the password box)
     image->Merge(bg, X, Y);
-    background = image->createPixmap(Dpy, Scr, Win);
+    background.push_back(image->createPixmap(Dpy, Scr, Win));
+
+    // Create rest of backgrounds (without password boxes)
+    for (unsigned int i = 1; i < viewport.size(); ++i) {
+        background.push_back(bg->createPixmap(Dpy, Scr, Win));
+    }
     delete bg;
     delete image;
 
@@ -184,7 +189,8 @@ Panel::~Panel() {
     XftFontClose(Dpy, enterfont);
 
     XFreeGC(Dpy, WinGC);
-    XFreePixmap(Dpy, background);
+    // need to free them all
+    XFreePixmap(Dpy, background[0]);
 }
 
 void Panel::ClosePanel() {
@@ -213,8 +219,8 @@ void Panel::WrongPassword(int timeout) {
     int shadowYOffset =
         Cfg::string2int(cfg->getOption("msg_shadow_yoffset").c_str());
 
-    int msg_x = Cfg::absolutepos(cfgX, viewport.width, extents.width);
-    int msg_y = Cfg::absolutepos(cfgY, viewport.height, extents.height);
+    int msg_x = Cfg::absolutepos(cfgX, viewport[0].width, extents.width);
+    int msg_y = Cfg::absolutepos(cfgY, viewport[0].height, extents.height);
 
     OnExpose();
     SlimDrawString8(draw, &msgcolor, msgfont, msg_x, msg_y, message,
@@ -250,8 +256,8 @@ void Panel::Message(const string& text) {
     int shadowYOffset =
         Cfg::string2int(cfg->getOption("msg_shadow_yoffset").c_str());
 
-    int msg_x = Cfg::absolutepos(cfgX, viewport.width, extents.width);
-    int msg_y = Cfg::absolutepos(cfgY, viewport.height, extents.height);
+    int msg_x = Cfg::absolutepos(cfgX, viewport[0].width, extents.width);
+    int msg_y = Cfg::absolutepos(cfgY, viewport[0].height, extents.height);
 
     SlimDrawString8(draw, &msgcolor, msgfont, msg_x, msg_y,
                     text,
@@ -293,9 +299,9 @@ void Panel::Cursor(int visible) {
     xx += extents.width;
 
     if(visible == SHOW) {
-        xx += viewport.x;
-        yy += viewport.y;
-        y2 += viewport.y;
+        xx += viewport[0].x;
+        yy += viewport[0].y;
+        y2 += viewport[0].y;
 
         XSetForeground(Dpy, TextGC,
                        GetColor(cfg->getOption("input_color").c_str()));
@@ -303,7 +309,7 @@ void Panel::Cursor(int visible) {
                   xx+1, yy-cheight,
                   xx+1, y2);
     } else {
-        ApplyBackground(Rectangle(xx+1, yy-cheight, 1, y2-(yy-cheight)+1));
+        ApplyBackground(Rectangle(xx+1, yy-cheight, 1, y2-(yy-cheight)+1), 0);
     }
 }
 
@@ -330,7 +336,11 @@ void Panel::EventHandler() {
 void Panel::OnExpose(void) {
     XftDraw *draw = XftDrawCreate(Dpy, Win,
                         DefaultVisual(Dpy, Scr), DefaultColormap(Dpy, Scr));
-    ApplyBackground();
+
+    for (unsigned int i = 0; i < viewport.size(); ++i) {
+        ApplyBackground(Rectangle(), i);
+    }
+
     if (input_pass_x != input_name_x || input_pass_y != input_name_y) {
         SlimDrawString8(draw, &inputcolor, font, input_name_x, input_name_y,
                         NameBuffer,
@@ -426,7 +436,7 @@ bool Panel::OnKeyPress(XEvent& event) {
         int maxLength = extents.width;
 
         ApplyBackground(Rectangle(input_pass_x - 3, input_pass_y - maxHeight - 3,
-                                  maxLength + 6, maxHeight + 6));
+                                  maxLength + 6, maxHeight + 6), 0);
     }
 
     if (fieldTextChanged) {
@@ -521,10 +531,10 @@ void Panel::SlimDrawString8(XftDraw *d, XftColor *color, XftFont *font,
                             int xOffset, int yOffset)
 {
     if (xOffset && yOffset) {
-        XftDrawString8(d, shadowColor, font, x+xOffset+viewport.x, y+yOffset+viewport.y,
+        XftDrawString8(d, shadowColor, font, x+xOffset+viewport[0].x, y+yOffset+viewport[0].y,
                        reinterpret_cast<const FcChar8*>(str.c_str()), str.length());
     }
-    XftDrawString8(d, color, font, x+viewport.x, y+viewport.y, reinterpret_cast<const FcChar8*>(str.c_str()), str.length());
+    XftDrawString8(d, color, font, x+viewport[0].x, y+viewport[0].y, reinterpret_cast<const FcChar8*>(str.c_str()), str.length());
 }
 
 void Panel::ResetPasswd(void) {
@@ -543,21 +553,21 @@ const string& Panel::GetPasswd(void) const {
     return PasswdBuffer;
 }
 
-Rectangle Panel::GetPrimaryViewport() {
-    Rectangle fallback;
-    Rectangle result;
+std::vector<Rectangle> Panel::GetPrimaryViewport() {
+
+    Rectangle temprect;
+    std::vector<Rectangle> fallback;
+    std::vector<Rectangle> result;
 
     RROutput primary;
     XRROutputInfo *primary_info;
     XRRScreenResources *resources;
     XRRCrtcInfo *crtc_info;
 
-    int crtc;
+    std::vector<int> crtcs;
 
-    fallback.x = 0;
-    fallback.y = 0;
-    fallback.width = DisplayWidth(Dpy, Scr);
-    fallback.height = DisplayHeight(Dpy, Scr);
+    fallback.push_back(Rectangle(0,0,DisplayWidth(Dpy,Scr),
+        DisplayHeight(Dpy,Scr)));
 
     primary = XRRGetOutputPrimary(Dpy, Win);
     if (!primary) {
@@ -574,55 +584,55 @@ Rectangle Panel::GetPrimaryViewport() {
         XRRFreeScreenResources(resources);
         return fallback;
     }
+       
     if (primary_info->crtc < 1) {
         if (primary_info->ncrtc > 0) {
-            // just use the first one. 
-            // i do not know what the consequences
-            // of this will be. it seems to be that the index
-            // is which monitor to use.  
-            crtc = primary_info->crtcs[0];
+           for (int i = 0; i < primary_info->ncrtc; ++i) {
+                crtcs.push_back(primary_info->crtcs[i]);
+            }
         } else {
             cerr << "Cannot get crtc from xrandr.\n";
-            exit(EXIT_FAILURE);
+            return fallback;
         }
     } else {
-        crtc = primary_info->crtc;
-    }
-    // this is the function call its dying on 
-    crtc_info = XRRGetCrtcInfo(Dpy, resources, crtc);
-
-
-    if (!crtc_info) {
-        XRRFreeOutputInfo(primary_info);
-        XRRFreeScreenResources(resources);
-        return fallback;
+        crtcs.push_back(primary_info->crtc);
     }
 
-    result.x = crtc_info->x;
-    result.y = crtc_info->y;
-    result.width = crtc_info->width;
-    result.height = crtc_info->height;
+    for (unsigned int i = 0; i < crtcs.size(); ++i) {
+        crtc_info = XRRGetCrtcInfo(Dpy, resources, crtcs[i]);
 
-    XRRFreeCrtcInfo(crtc_info);
+        if (!crtc_info) {
+            // is this a leak? why no
+            // XRRFreeCrtcInfo(crtc_info);
+            XRRFreeOutputInfo(primary_info);
+            XRRFreeScreenResources(resources);
+            return fallback;
+        }
+
+        result.push_back(Rectangle(crtc_info->x, crtc_info->y, 
+            crtc_info->width, crtc_info->height));
+        XRRFreeCrtcInfo(crtc_info);
+    }
+
     XRRFreeOutputInfo(primary_info);
     XRRFreeScreenResources(resources);
 
     return result;
 }
 
-void Panel::ApplyBackground(Rectangle rect) {
+void Panel::ApplyBackground(Rectangle rect, int vp) {
     int ret;
 
     if (rect.is_empty()) {
         rect.x = 0;
         rect.y = 0;
-        rect.width = viewport.width;
-        rect.height = viewport.height;
+        rect.width = viewport[vp].width;
+        rect.height = viewport[vp].height;
     }
 
-    ret = XCopyArea(Dpy, background, Win, WinGC,
+    ret = XCopyArea(Dpy, background[vp], Win, WinGC,
                     rect.x, rect.y, rect.width, rect.height,
-                    viewport.x + rect.x, viewport.y + rect.y);
+                    viewport[vp].x + rect.x, viewport[vp].y + rect.y);
 
     if (!ret) {
         cerr << APPNAME << ": failed to put pixmap on the screen\n.";
