@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     // ...i think
     struct stat statbuf;
     int lock_file;
-    
+
     // try /run/lock first, since i believe it's preferred
     if (!stat("/run/lock", &statbuf))
         lock_file = open("/run/lock/"APPNAME".lock", O_CREAT | O_RDWR, 0666);
@@ -88,12 +88,12 @@ int main(int argc, char **argv) {
         lock_file = open("/var/lock/"APPNAME".lock", O_CREAT | O_RDWR, 0666);
 
     int rc = flock(lock_file, LOCK_EX | LOCK_NB);
-        
+
     if(rc) {
         if(EWOULDBLOCK == errno)
             die(APPNAME" already running\n");
     }
-    
+
     unsigned int cfg_passwd_timeout;
     // Read user's current theme
     cfg = new Cfg;
@@ -222,13 +222,13 @@ int main(int argc, char **argv) {
         // AuthenticateUser returns true if authenticated
         if (AuthenticateUser())
             break;
-        
+
         loginPanel->WrongPassword(cfg_passwd_timeout);
     }
-    
+
     // kill thread before destroying the window that it's supposed to be raising
     pthread_cancel(raise_thread);
-    
+
     loginPanel->ClosePanel();
     delete loginPanel;
 
@@ -241,7 +241,8 @@ int main(int argc, char **argv) {
     }
 
     XCloseDisplay(dpy);
-    
+
+    flock(lock_file, LOCK_UN);
     close(lock_file);
 
     if(cfg->getOption("tty_lock") == "1") {
