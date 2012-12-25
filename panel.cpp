@@ -149,7 +149,6 @@ Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
     image->Merge(bg, X, Y);
     background = image->createPixmap(Dpy, Scr, Win);
     delete bg;
-    delete image;
 
     // Read (and substitute vars in) the welcome message
     int show_welcome_msg = Cfg::string2int(cfg->getOption("show_welcome_msg").c_str());
@@ -182,6 +181,7 @@ Panel::~Panel() {
     XftFontClose(Dpy, introfont);
     XftFontClose(Dpy, welcomefont);
     XftFontClose(Dpy, enterfont);
+    delete image;
 
     XFreeGC(Dpy, WinGC);
     XFreePixmap(Dpy, background);
