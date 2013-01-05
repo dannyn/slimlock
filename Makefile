@@ -5,7 +5,7 @@ CXX = g++
 CC  = gcc
 
 PKGS=x11 xrandr xft fontconfig imlib2 xext
-MYCFLAGS=-Wall -I. $(shell pkg-config --cflags $(PKGS)) -pthread
+MYCFLAGS=-Wall -I. $(shell pkg-config --cflags $(PKGS)) -pthread 
 CXXFLAGS=$(CFLAGS) $(MYCFLAGS)
 LIBS=$(shell pkg-config --libs $(PKGS)) -lrt -lpam -pthread
 CUSTOM=

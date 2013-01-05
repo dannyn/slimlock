@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #ifdef NEEDS_BASENAME
 #include <libgen.h>
@@ -60,6 +61,7 @@ public:
     void SetName(const std::string& name);
     const std::string& GetName(void) const;
     const std::string& GetPasswd(void) const;
+
 private:
     Panel();
     void Cursor(int visible);
@@ -73,8 +75,8 @@ private:
                             XftColor* shadowColor,
                             int xOffset, int yOffset);
 
-    Rectangle GetPrimaryViewport();
-    void ApplyBackground(Rectangle = Rectangle());
+    std::vector<Rectangle> GetPrimaryViewport();
+    void ApplyBackground(Rectangle, int vp);
 
     Cfg* cfg;
     bool CapsLockOn;
@@ -100,7 +102,7 @@ private:
     XftFont* enterfont;
     XftColor entercolor;
     XftColor entershadowcolor;
-    Pixmap   background;
+    std::vector<Pixmap>   background;
 
     // Username/Password
     std::string NameBuffer;
@@ -108,7 +110,7 @@ private:
     std::string HiddenPasswdBuffer;
 
     // screen stuff
-    Rectangle viewport;
+    std::vector<Rectangle> viewport;
 
     // Configuration
     int input_name_x;
