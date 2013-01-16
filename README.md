@@ -1,7 +1,7 @@
-NO LONGER MAINTAINED
+Once Again Maintained
 ====================
-As of October 7 I (Joel Burget) have given up maintainership of this project.
-Feel free to use it but I am no longer fixing bugs.
+Maintenance of this project has been picked up by me (danny noest).  Please 
+feel free to toss any bugs my way (dnoest@gmail.com). 
 
 slimlock - unholy screen locker
 ===============================
