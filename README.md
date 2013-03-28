@@ -54,6 +54,9 @@ are:
 -	`bell`: whether to ring the bell on authentication failure. 1 to
 	enable, 0 to disable.
 	-	Default: 1
+-	`passwd_char`: character to display when masking password. Only the first
+	character is used.
+	-	Default: *
 
 Copyright
 ---------
