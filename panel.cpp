@@ -74,6 +74,8 @@ Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
     input_name_y = Cfg::string2int(cfg->getOption("input_name_y").c_str());
     input_pass_x = Cfg::string2int(cfg->getOption("input_pass_x").c_str());
     input_pass_y = Cfg::string2int(cfg->getOption("input_pass_y").c_str());
+    password_char = cfg->getOption("passwd_char").c_str()[0];
+
     inputShadowXOffset =
         Cfg::string2int(cfg->getOption("input_shadow_xoffset").c_str());
     inputShadowYOffset =
@@ -413,7 +415,7 @@ bool Panel::OnKeyPress(XEvent& event) {
                 formerString=HiddenPasswdBuffer;
                 if (PasswdBuffer.length() < INPUT_MAXLENGTH_PASSWD - 1) {
                     PasswdBuffer.push_back(ascii);
-                    HiddenPasswdBuffer.push_back('*');
+                    HiddenPasswdBuffer.push_back(password_char);
                 }
             } else {
                 fieldTextChanged = false;

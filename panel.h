@@ -134,6 +134,7 @@ private:
     int password_y;
     std::string welcome_message;
     std::string intro_message;
+    char password_char;
 
     Image* image;
 
