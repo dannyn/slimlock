@@ -1,12 +1,12 @@
 /* SLiM - Simple Login Manager
    Copyright (C) 2004-06 Simone Rota <sip@varlock.com>
    Copyright (C) 2004-06 Johannes Winkelmann <jw@tks6.net>
-      
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    The following code has been adapted and extended from
    xplanet 1.0.1, Copyright (C) 2002-04 Hari Nair <hari@alumni.caltech.edu>
 */
@@ -41,10 +41,8 @@ public:
     void Crop(const int x, const int y, const int w, const int h);
     void Tile(const int w, const int h);
     void Center(const int w, const int h, const char *hex);
-    
 
     Pixmap createPixmap(Display* dpy, int scr, Window win);
-
 
 private:
     int width, height;
