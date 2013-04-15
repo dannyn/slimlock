@@ -57,9 +57,8 @@ Image::Resize(const int w, const int h) {
  * background, the background must contain the image.
  */
 void Image::Merge(Image* background, const int x, const int y) {
-    if (x + width > background->Width()|| y + height > background->Height()) {
+    if (x + width > background->Width()|| y + height > background->Height())
         return;
-    }
 
     Imlib_Image bg_image, new_image;
     bg_image = background->GetImage();
@@ -88,10 +87,9 @@ void Image::Tile(const int w, const int h) {
     tiles_x = w / width;
     tiles_y = h / height;
     for(int i=0; i <= tiles_x; i++) {
-        for(int j=0; j <= tiles_y; j++) {
+        for(int j=0; j <= tiles_y; j++)
             imlib_blend_image_onto_image(image, 0, 0, 0, width, height,
                                          i * width, j * height, width, height);
-        }
     }
 
     width = w;

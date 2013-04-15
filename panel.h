@@ -34,17 +34,16 @@
 #include "image.h"
 
 struct Rectangle {
-  int x;
-  int y;
-  unsigned int width;
-  unsigned int height;
+    int x;
+    int y;
+    unsigned int width;
+    unsigned int height;
 
-  Rectangle() : x(0), y(0), width(0), height(0) {};
-  Rectangle(int x, int y, unsigned int width, unsigned int height) :
-      x(x), y(y), width(width), height(height) {};
-  bool is_empty() const {
-    return width == 0 || height == 0;
-  }
+    Rectangle() : x(0), y(0), width(0), height(0) {};
+    Rectangle(int x, int y, unsigned int width, unsigned int height) :
+        x(x), y(y), width(width), height(height) {};
+    bool is_empty() const
+      return width == 0 || height == 0;
 };
 
 class Panel {
@@ -140,7 +139,6 @@ private:
 
     // For thesting themes
     std::string themedir;
-
 };
 
 #endif
