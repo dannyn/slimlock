@@ -98,6 +98,7 @@ Cfg::Cfg()
     options.insert(option("show_welcome_msg", "0"));
     options.insert(option("tty_lock", "1"));
     options.insert(option("bell", "1"));
+    options.insert(option("passwd_char", "*"));
 
     error = "";
 }
