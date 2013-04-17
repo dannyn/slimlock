@@ -40,9 +40,8 @@ long Util::makeseed(void)
 	long pid = getpid();
 	long tm = time(NULL);
 
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
 		ts.tv_sec = ts.tv_nsec = 0;
-	}
 
 	return pid + tm + (ts.tv_sec ^ ts.tv_nsec);
 }

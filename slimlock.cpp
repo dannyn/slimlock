@@ -73,7 +73,8 @@ int main(int argc, char **argv) {
 
     // restore DPMS settings should slimlock be killed in the line of duty
     prev_fn = signal(SIGTERM, HandleSignal);
-    if (prev_fn == SIG_IGN) signal(SIGTERM, SIG_IGN);
+    if (prev_fn == SIG_IGN)
+        signal(SIGTERM, SIG_IGN);
 
     // create a lock file to solve mutliple instances problem
     // /var/lock used to be the place to put this, now it's /run/lock
@@ -106,9 +107,8 @@ int main(int argc, char **argv) {
     themebase = string(THEMESDIR) + "/";
     themeName = cfg->getOption("current_theme");
     string::size_type pos;
-    if ((pos = themeName.find(",")) != string::npos) {
+    if ((pos = themeName.find(",")) != string::npos)
         themeName = findValidRandomTheme(themeName);
-    }
 
     bool loaded = false;
     while (!loaded) {
@@ -124,15 +124,13 @@ int main(int argc, char **argv) {
                      << themeName << endl;
                 themeName = "default";
             }
-        } else {
+        } else
             loaded = true;
-        }
     }
 
     const char *display = getenv("DISPLAY");
-    if (!display){
+    if (!display)
         display = DISPLAY;
-    }
     XInitThreads();
 
     if(!(dpy = XOpenDisplay(display)))
@@ -146,17 +144,17 @@ int main(int argc, char **argv) {
     // Create a full screen window
     root = RootWindow(dpy, scr);
     win = XCreateWindow(dpy,
-      root,
-      0,
-      0,
-      DisplayWidth(dpy, scr),
-      DisplayHeight(dpy, scr),
-      0,
-      DefaultDepth(dpy, scr),
-      CopyFromParent,
-      DefaultVisual(dpy, scr),
-      CWOverrideRedirect | CWBackPixel,
-      &wa);
+        root,
+        0,
+        0,
+        DisplayWidth(dpy, scr),
+        DisplayHeight(dpy, scr),
+        0,
+        DefaultDepth(dpy, scr),
+        CopyFromParent,
+        DefaultVisual(dpy, scr),
+        CWOverrideRedirect | CWBackPixel,
+        &wa);
     XMapWindow(dpy, win);
 
     XFlush(dpy);
@@ -183,13 +181,11 @@ int main(int argc, char **argv) {
 
     // disable tty switching
     if(cfg->getOption("tty_lock") == "1") {
-        if ((term = open("/dev/console", O_RDWR)) == -1) {
+        if ((term = open("/dev/console", O_RDWR)) == -1)
             perror("error opening console");
-        }
 
-        if ((ioctl(term, VT_LOCKSWITCH)) == -1) {
+        if ((ioctl(term, VT_LOCKSWITCH)) == -1)
             perror("error locking console");
-        }
     }
 
     // Set up DPMS
@@ -248,9 +244,8 @@ int main(int argc, char **argv) {
     close(lock_file);
 
     if(cfg->getOption("tty_lock") == "1") {
-        if ((ioctl(term, VT_UNLOCKSWITCH)) == -1) {
+        if ((ioctl(term, VT_UNLOCKSWITCH)) == -1)
             perror("error unlocking console");
-        }
     }
     close(term);
 
@@ -314,9 +309,8 @@ string findValidRandomTheme(const string& set)
     string name = set;
     struct stat buf;
 
-    if (name[name.length() - 1] == ',') {
+    if (name[name.length() - 1] == ',')
         name.erase(name.length() - 1);
-    }
 
     Util::srandom(Util::makeseed());
 
@@ -348,9 +342,8 @@ void HandleSignal(int sig)
             DPMSDisable(dpy);
     }
 
-    if ((ioctl(term, VT_UNLOCKSWITCH)) == -1) {
+    if ((ioctl(term, VT_UNLOCKSWITCH)) == -1)
         perror("error unlocking console");
-    }
     close(term);
 
     loginPanel->ClosePanel();
@@ -359,7 +352,7 @@ void HandleSignal(int sig)
     die(APPNAME": Caught signal; dying\n");
 }
 
-// i think this should be in an event loop instead of this threaded 
+// i think this should be in an event loop instead of this threaded
 // thing
 void* RaiseWindow(void *data) {
     while(1) {

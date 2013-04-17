@@ -5,7 +5,7 @@ CXX = g++
 CC  = gcc
 
 PKGS=x11 xrandr xft fontconfig imlib2 xext
-MYCFLAGS=-Wall -I. $(shell pkg-config --cflags $(PKGS)) -pthread 
+MYCFLAGS=-Wall -I. $(shell pkg-config --cflags $(PKGS)) -pthread
 CXXFLAGS=$(CFLAGS) $(MYCFLAGS)
 LIBS=$(shell pkg-config --libs $(PKGS)) -lrt -lpam -pthread
 CUSTOM=
@@ -47,3 +47,9 @@ install: slimlock
 	@chmod u+s $(DESTDIR)$(PREFIX)/bin/slimlock
 	@install -D -m 644 slimlock.conf $(DESTDIR)$(CFGDIR)/slimlock.conf
 	@install -D -m 644 slimlock.pam $(DESTDIR)$(CFGDIR)/pam.d/slimlock
+
+uninstall:
+	@rm -f $(DESTDIR)$(MANDIR)/man1/slimlock.1
+	@rm -f $(DESTDIR)$(PREFIX)/bin/slimlock
+	@rm -f $(DESTDIR)$(CFGDIR)/slimlock.conf
+	@rm -f $(DESTDIR)$(CFGDIR)/pam.d/slimlock
