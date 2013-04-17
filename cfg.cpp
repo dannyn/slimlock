@@ -24,7 +24,7 @@ using namespace std;
 
 typedef pair<string,string> option;
 
-Cfg::Cfg() 
+Cfg::Cfg()
 {
     // Configuration options
     options.insert(option("screenshot_cmd", "import -window root /slim.png"));
@@ -152,23 +152,19 @@ string& Cfg::getOption(string option) {
 
 /* return a trimmed string */
 string Cfg::trim( const string& s ) {
-    if ( s.empty() ) {
+    if ( s.empty() )
         return s;
-    }
     int pos = 0;
     string line = s;
     int len = line.length();
-    while (pos < len && isspace(line[pos])) {
+    while (pos < len && isspace(line[pos]))
         ++pos;
-    }
     line.erase( 0, pos );
     pos = line.length() - 1;
-    while (pos > -1 && isspace(line[pos])) {
+    while (pos > -1 && isspace(line[pos]))
         --pos;
-    }
-    if ( pos != -1 ) {
+    if ( pos != -1 )
         line.erase( pos+1 );
-    }
     return line;
 }
 
@@ -200,9 +196,8 @@ string Cfg::getWelcomeMessage() {
 int Cfg::string2int(const char* string, bool* ok) {
     char* err = 0;
     int l = (int)strtol(string, &err, 10);
-    if (ok) {
+    if (ok)
         *ok = (*err == 0);
-    }
     return (*err == 0) ? l : 0;
 }
 
@@ -213,9 +208,8 @@ int Cfg::absolutepos(const string& position, int max, int width) {
     if (n>0) { // X Position expressed in percentage
         int result = (max*string2int(position.substr(0, n).c_str())/100) - (width / 2);
         return result < 0 ? 0 : result ;
-    } else { // Absolute X position
+    } else // Absolute X position
         return string2int(position.c_str());
-    }
 }
 
 // split a comma separated string into a vector of strings
@@ -225,15 +219,15 @@ void Cfg::split(vector<string>& v, const string& str, char c, bool useEmpty) {
     string tmp;
     while (true) {
         string::const_iterator begin = s;
-        while (*s != c && s != str.end()) { ++s; }
-    tmp = string(begin, s);
-    if (useEmpty || tmp.size() > 0)
+        while (*s != c && s != str.end())
+            ++s;
+        tmp = string(begin, s);
+        if (useEmpty || tmp.size() > 0)
             v.push_back(tmp);
-        if (s == str.end()) {
+        if (s == str.end())
             break;
-        }
         if (++s == str.end()) {
-        if (useEmpty)
+            if (useEmpty)
                 v.push_back("");
             break;
         }

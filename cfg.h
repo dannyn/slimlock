@@ -36,14 +36,13 @@ public:
 
     static int absolutepos(const std::string& position, int max, int width);
     static int string2int(const char* string, bool* ok = 0);
-    static void split(std::vector<std::string>& v, const std::string& str, 
+    static void split(std::vector<std::string>& v, const std::string& str,
                       char c, bool useEmpty=true);
     static std::string trim(const std::string& s);
 
 private:
     std::map<std::string,std::string> options;
     std::string error;
-
 };
 
 #endif
