@@ -18,7 +18,6 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/dpms.h>
 #include <security/pam_appl.h>
-#include <pthread.h>
 #include <err.h>
 #include <signal.h>
 #include <unistd.h>
@@ -36,7 +35,6 @@ static int ConvCallback(int num_msgs, const struct pam_message **msg,
                         struct pam_response **resp, void *appdata_ptr);
 string findValidRandomTheme(const string& set);
 void HandleSignal(int sig);
-void *RaiseWindow(void *data);
 
 // I really didn't wanna put these globals here, but it's the only way...
 Display* dpy;
@@ -164,7 +162,7 @@ int main(int argc, char **argv) {
             break;
         usleep(1000);
     }
-    XSelectInput(dpy, win, ExposureMask | KeyPressMask);
+    XSelectInput(dpy, win, ExposureMask | KeyPressMask | VisibilityChangeMask);
 
     // This hides the cursor if the user has that option enabled in their
     // configuration
@@ -209,9 +207,6 @@ int main(int argc, char **argv) {
     // Let's just make sure it has a sane value
     cfg_passwd_timeout = cfg_passwd_timeout > 60 ? 60 : cfg_passwd_timeout;
 
-    pthread_t raise_thread;
-    pthread_create(&raise_thread, NULL, RaiseWindow, NULL);
-
     // Main loop
     while (true)
     {
@@ -223,9 +218,6 @@ int main(int argc, char **argv) {
 
         loginPanel->WrongPassword(cfg_passwd_timeout);
     }
-
-    // kill thread before destroying the window that it's supposed to be raising
-    pthread_cancel(raise_thread);
 
     loginPanel->ClosePanel();
     delete loginPanel;
@@ -350,14 +342,4 @@ void HandleSignal(int sig)
     delete loginPanel;
 
     die(APPNAME": Caught signal; dying\n");
-}
-
-// i think this should be in an event loop instead of this threaded
-// thing
-void* RaiseWindow(void *data) {
-    while(1) {
-        XRaiseWindow(dpy, win);
-        XGrabKeyboard(dpy, root, True, GrabModeAsync, GrabModeAsync, CurrentTime);
-        sleep(1);
-    }
 }

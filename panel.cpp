@@ -318,6 +318,12 @@ void Panel::EventHandler() {
     while(loop) {
         XNextEvent(Dpy, &event);
         switch(event.type) {
+            case VisibilityNotify:
+                if (event.xvisibility.state == VisibilityPartiallyObscured ||
+                    event.xvisibility.state == VisibilityFullyObscured) {
+                    XRaiseWindow(Dpy, Win);
+                }
+                break;
             case Expose:
                 OnExpose();
                 break;
