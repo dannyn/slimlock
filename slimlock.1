@@ -61,5 +61,10 @@ message to display after a failed authentication attempt if the CapsLock is on.
 .B passwd_char
 Character to show when masking password.
 .BI "Default: " *
+.B raise_interval
+raise slimlock window every this number of milliseconds. This is needed to
+hide other windows that can potentially pop on top of slimlock (e.g. various
+notifications). 0 to disable.
+.BI "Default: " 1000
 .SH "SEE ALSO"
 .BR slim (1)

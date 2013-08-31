@@ -78,6 +78,9 @@ private:
     std::vector<Rectangle> GetPrimaryViewport();
     void ApplyBackground(Rectangle, int vp);
 
+    bool GetCurrentTime(struct timespec *time) const;
+    void UpdateRaiseTimeout();
+
     Cfg* cfg;
     bool CapsLockOn;
 
@@ -85,6 +88,7 @@ private:
     Window Win;
     GC WinGC;
     Display* Dpy;
+    int DpyFd;
     int Scr;
     int X, Y;
     GC TextGC;
@@ -103,6 +107,10 @@ private:
     XftColor entercolor;
     XftColor entershadowcolor;
     std::vector<Pixmap>   background;
+
+    int raise_interval;
+    struct timespec last_raise_time;
+    struct timeval raise_timeout;
 
     // Username/Password
     std::string NameBuffer;

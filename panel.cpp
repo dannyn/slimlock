@@ -16,6 +16,10 @@
 #include <unistd.h>
 #include <X11/extensions/Xrandr.h>
 
+#include <sys/select.h>
+#include <time.h>
+#include <errno.h>
+
 using namespace std;
 
 Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
@@ -25,6 +29,7 @@ Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
 
     // Set display
     Dpy = dpy;
+    DpyFd = ConnectionNumber(Dpy);
     Scr = scr;
     Win = win;
     cfg = config;
@@ -168,6 +173,15 @@ Panel::Panel(Display* dpy, int scr, Window win, Cfg* config,
 
     // Draw the panel for the first time
     OnExpose();
+
+    raise_interval = Cfg::string2int(cfg->getOption("raise_interval").c_str());
+    if (raise_interval == 0) {
+        // don't raise window periodically; actually just raise it rarely
+        raise_interval = 3600 * 1000;
+    }
+
+    last_raise_time.tv_sec = 0;
+    last_raise_time.tv_nsec = 0;
 }
 
 Panel::~Panel() {
@@ -314,17 +328,50 @@ void Panel::Cursor(int visible) {
 void Panel::EventHandler() {
     XEvent event;
     bool loop = true;
+
     //OnExpose();
     while(loop) {
-        XNextEvent(Dpy, &event);
-        switch(event.type) {
-            case Expose:
-                OnExpose();
-                break;
+        fd_set fds;
+        int ret;
 
-            case KeyPress:
-                loop = OnKeyPress(event);
-                break;
+        FD_ZERO(&fds);
+        FD_SET(DpyFd, &fds);
+
+        UpdateRaiseTimeout();
+        ret = select(DpyFd + 1, &fds, 0, 0, &raise_timeout);
+        if (ret == 0) {
+            // timeout; raising our window
+            XRaiseWindow(Dpy, Win);
+        } else if (ret < 0) {
+            int select_errno = errno;
+
+            if (select_errno == EINTR) {
+              continue;
+            }
+
+            cerr << APPNAME << ": select failed ("
+                 << strerror(select_errno) << ")\n";
+            exit(ERR_EXIT);
+        }
+
+        while (loop && XPending(Dpy)) {
+            XNextEvent(Dpy, &event);
+
+            switch(event.type) {
+                case VisibilityNotify:
+                    if (event.xvisibility.state == VisibilityPartiallyObscured ||
+                        event.xvisibility.state == VisibilityFullyObscured) {
+                        XRaiseWindow(Dpy, Win);
+                    }
+                    break;
+                case Expose:
+                    OnExpose();
+                    break;
+
+                case KeyPress:
+                    loop = OnKeyPress(event);
+                    break;
+            }
         }
     }
 
@@ -625,4 +672,45 @@ void Panel::ApplyBackground(Rectangle rect, int vp) {
 
     if (!ret)
         cerr << APPNAME << ": failed to put pixmap on the screen\n.";
+}
+
+bool Panel::GetCurrentTime(struct timespec *time) const {
+    int ret = clock_gettime(CLOCK_MONOTONIC, time);
+    if (ret == 0) {
+        return true;
+    } else {
+        int gettime_errno = errno;
+        cerr << APPNAME << ": clock_gettime failed ("
+             << strerror(gettime_errno) << ")\n";
+
+        return false;
+    }
+}
+
+void Panel::UpdateRaiseTimeout() {
+    struct timespec curr_time;
+
+    if (GetCurrentTime(&curr_time)) {
+        // past time in milliseconds
+        int past_time;
+
+        past_time = (curr_time.tv_sec - last_raise_time.tv_sec) * 1000;
+        past_time += (curr_time.tv_nsec - last_raise_time.tv_nsec) / 1000000;
+
+        if (past_time >= raise_interval) {
+            last_raise_time = curr_time;
+
+            raise_timeout.tv_sec = 0;
+            raise_timeout.tv_usec = 0;
+        } else {
+            int left_time = raise_interval - past_time;
+
+            raise_timeout.tv_sec = left_time / 1000;
+            raise_timeout.tv_usec = (left_time % 1000) * 1000;
+        }
+    } else {
+        // failed to grab time; force window to raise just in case
+        raise_timeout.tv_sec = 0;
+        raise_timeout.tv_usec = 0;
+    }
 }
