@@ -99,6 +99,7 @@ Cfg::Cfg()
     options.insert(option("tty_lock", "1"));
     options.insert(option("bell", "1"));
     options.insert(option("passwd_char", "*"));
+    options.insert(option("raise_interval", "1000"));
 
     error = "";
 }

@@ -57,6 +57,10 @@ are:
 -	`passwd_char`: character to display when masking password. Only the first
 	character is used.
 	-	Default: *
+-	`raise_interval`: raise slimlock window every this number of milliseconds.
+	This is needed to hide other windows that can potentially pop on top of
+	slimlock (e.g. various notifications). 0 to disable.
+	-	Default: 1000
 
 Copyright
 ---------
