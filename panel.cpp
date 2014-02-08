@@ -15,6 +15,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <X11/extensions/Xrandr.h>
+#ifdef __FreeBSD__
+#include <libgen.h>
+#endif
 
 using namespace std;
 

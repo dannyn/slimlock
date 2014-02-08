@@ -11,8 +11,10 @@
 #include <cstring>
 #include <algorithm>
 #include <sys/types.h>
+#ifdef __LINUX__
 #include <sys/ioctl.h>
 #include <linux/vt.h>
+#endif
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -51,7 +53,9 @@ struct pam_conv conv = {ConvCallback, NULL};
 
 CARD16 dpms_standby, dpms_suspend, dpms_off, dpms_level;
 BOOL dpms_state, using_dpms;
+#ifdef __LINUX__
 int term;
+#endif
 
 static void
 die(const char *errstr, ...) {
@@ -179,6 +183,7 @@ int main(int argc, char **argv) {
     if (ret != PAM_SUCCESS)
         die("PAM: %s\n", pam_strerror(pam_handle, ret));
 
+#ifdef __LINUX__
     // disable tty switching
     if(cfg->getOption("tty_lock") == "1") {
         if ((term = open("/dev/console", O_RDWR)) == -1)
@@ -187,6 +192,7 @@ int main(int argc, char **argv) {
         if ((ioctl(term, VT_LOCKSWITCH)) == -1)
             perror("error locking console");
     }
+#endif
 
     // Set up DPMS
     unsigned int cfg_dpms_standby, cfg_dpms_off;
@@ -243,11 +249,13 @@ int main(int argc, char **argv) {
     flock(lock_file, LOCK_UN);
     close(lock_file);
 
+#ifdef __LINUX__
     if(cfg->getOption("tty_lock") == "1") {
         if ((ioctl(term, VT_UNLOCKSWITCH)) == -1)
             perror("error unlocking console");
     }
     close(term);
+#endif
 
     return 0;
 }
@@ -342,9 +350,11 @@ void HandleSignal(int sig)
             DPMSDisable(dpy);
     }
 
+#ifdef __LINUX__
     if ((ioctl(term, VT_UNLOCKSWITCH)) == -1)
         perror("error unlocking console");
     close(term);
+#endif
 
     loginPanel->ClosePanel();
     delete loginPanel;
