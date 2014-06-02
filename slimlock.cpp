@@ -98,8 +98,13 @@ int main(int argc, char **argv) {
     unsigned int cfg_passwd_timeout;
     // Read user's current theme
     cfg = new Cfg;
-    cfg->readConf(CFGFILE);
-    cfg->readConf(SLIMLOCKCFG);
+
+    if (!cfg->readConf(CFGFILE))
+      die("%s\n", cfg->getError().c_str());
+
+    if (!cfg->readConf(SLIMLOCKCFG))
+      die("%s\n", cfg->getError().c_str());
+
     string themebase = "";
     string themefile = "";
     string themedir = "";
@@ -173,6 +178,10 @@ int main(int argc, char **argv) {
     // Create panel
     loginPanel = new Panel(dpy, scr, win, cfg, themedir);
 
+    // Verify that our installed PAM config exists (pam_start does not guarantee this)
+    if (stat(PAM_SERVICE_FILE, &statbuf) != 0)
+      die("Could not find our PAM service file %s\n", PAM_SERVICE_FILE);
+
     // Set up PAM
     int ret = pam_start(APPNAME, loginPanel->GetName().c_str(), &conv, &pam_handle);
     // If we can't start PAM, just exit because slimlock won't work right
@@ -182,10 +191,10 @@ int main(int argc, char **argv) {
     // disable tty switching
     if(cfg->getOption("tty_lock") == "1") {
         if ((term = open("/dev/console", O_RDWR)) == -1)
-            perror("error opening console");
+            perror("error opening console for TTY lock");
 
         if ((ioctl(term, VT_LOCKSWITCH)) == -1)
-            perror("error locking console");
+            perror("error locking console for TTY lock");
     }
 
     // Set up DPMS

@@ -14,6 +14,7 @@
 
 
 #define APPNAME    "slimlock"
+#define PAM_SERVICE_FILE "/etc/pam.d/" APPNAME
 
 #define DISPLAY    ":0.0"
 
